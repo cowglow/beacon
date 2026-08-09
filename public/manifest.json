@@ -1,0 +1,19 @@
+{
+  "name": "Beacon",
+  "short_name": "Beacon",
+  "description": "Hold up your phone as a giant, readable sign.",
+  "lang": "en",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,445 @@
+:root {
+    --preset-bg: unset;
+    --preset-fg: unset;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    background: #000;
+    overscroll-behavior: none;
+}
+
+body {
+    font-family: -apple-system, Roboto, system-ui, sans-serif;
+}
+
+button {
+    font-family: inherit;
+}
+
+#app {
+    position: relative;
+    height: 100dvh;
+    width: 100%;
+    overflow: hidden;
+}
+
+.screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ---------- Boot: splash & install prompt ---------- */
+
+.splash-screen,
+.install-screen {
+    position: fixed;
+    inset: 0;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 32px;
+    text-align: center;
+    z-index: 2000;
+}
+
+.splash-mark,
+.install-mark {
+    font-size: clamp(32px, 11vw, 64px);
+    font-weight: 900;
+    letter-spacing: 6px;
+    color: #ffd400;
+}
+
+.splash-mark {
+    animation: splash-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes splash-pulse {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.6;
+        transform: scale(0.96);
+    }
+}
+
+.splash-bar {
+    width: min(240px, 60vw);
+    height: 6px;
+    background: #222;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.splash-bar-fill {
+    height: 100%;
+    width: 0;
+    background: #ffd400;
+    animation: splash-fill 3s linear forwards;
+}
+
+@keyframes splash-fill {
+    from {
+        width: 0;
+    }
+    to {
+        width: 100%;
+    }
+}
+
+.install-screen {
+    background: #111;
+    color: #fff;
+}
+
+.install-copy,
+.ios-instructions {
+    margin: 0;
+    max-width: 320px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #ccc;
+}
+
+.install-btn,
+.continue-btn {
+    width: 100%;
+    max-width: 320px;
+    padding: 18px;
+    font-size: 18px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+.install-btn {
+    background: #ffd400;
+    color: #000;
+    border: none;
+}
+
+.continue-btn {
+    background: transparent;
+    color: #fff;
+    border: 3px solid #333;
+}
+
+/* ---------- Compose ---------- */
+
+.compose-screen {
+    background: #111;
+    color: #fff;
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+#message-input {
+    flex: 1;
+    width: 100%;
+    min-height: 0;
+    border: none;
+    background: transparent;
+    color: #fff;
+    font-family: inherit;
+    font-size: clamp(28px, 9vw, 64px);
+    font-weight: 900;
+    text-transform: uppercase;
+    line-height: 1.1;
+    padding: 24px;
+    resize: none;
+    outline: none;
+    caret-color: #ffd400;
+}
+
+#message-input::placeholder {
+    color: #444;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px;
+    background: #000;
+    border-top: 4px solid #222;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.swatch {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: 4px solid #333;
+    font-weight: 900;
+    font-size: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+}
+
+.swatch.selected {
+    border-color: #fff;
+}
+
+.custom-swatch-wrap {
+    position: relative;
+}
+
+.custom-fg-btn {
+    position: absolute;
+    bottom: -6px;
+    right: -6px;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border-radius: 50%;
+    border: 3px solid #000;
+    cursor: pointer;
+}
+
+.color-input-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.mode-btn {
+    flex: 1;
+    min-width: 90px;
+    padding: 14px 10px;
+    font-size: 16px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    background: #1c1c1c;
+    color: #fff;
+    border: 3px solid #333;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.mode-btn.selected {
+    background: #ffd400;
+    color: #000;
+    border-color: #ffd400;
+}
+
+#go-btn {
+    padding: 22px;
+    font-size: 28px;
+    font-weight: 900;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background: #ffd400;
+    color: #000;
+    border: none;
+    border-radius: 14px;
+    cursor: pointer;
+}
+
+#go-btn:active {
+    transform: scale(0.97);
+}
+
+#recents-toggle {
+    width: 100%;
+    padding: 14px;
+    background: #000;
+    color: #888;
+    border: none;
+    border-top: 1px solid #222;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    cursor: pointer;
+}
+
+.drawer {
+    max-height: 0;
+    overflow: hidden;
+    background: #0a0a0a;
+    transition: max-height 0.25s ease;
+}
+
+.drawer.open {
+    max-height: 40vh;
+    overflow-y: auto;
+}
+
+#recents-list {
+    list-style: none;
+    margin: 0;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recent-item {
+    width: 100%;
+    text-align: left;
+    padding: 16px;
+    background: #1a1a1a;
+    color: #fff;
+    border: 2px solid #2a2a2a;
+    border-radius: 10px;
+    font-size: 18px;
+    font-weight: 700;
+    text-transform: uppercase;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+
+.recent-item:active {
+    background: #2a2a2a;
+}
+
+/* ---------- Confirm dialog ---------- */
+
+.confirm-dialog {
+    border: none;
+    border-radius: 16px;
+    padding: 24px;
+    background: #111;
+    color: #fff;
+    width: calc(100% - 48px);
+    max-width: 340px;
+}
+
+.confirm-dialog::backdrop {
+    background: rgba(0, 0, 0, 0.7);
+}
+
+.dialog-message {
+    margin: 0 0 20px;
+    font-size: 18px;
+    font-weight: 800;
+    text-align: center;
+    text-transform: uppercase;
+    word-break: break-word;
+}
+
+.dialog-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.dialog-btn {
+    flex: 1;
+    padding: 16px;
+    font-size: 16px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-radius: 10px;
+    border: 3px solid #333;
+    cursor: pointer;
+}
+
+.dialog-btn.keep {
+    background: #1c1c1c;
+    color: #fff;
+}
+
+.dialog-btn.remove {
+    background: #e10600;
+    color: #fff;
+    border-color: #e10600;
+}
+
+/* ---------- Display ---------- */
+
+.display-screen {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.display-screen.rotate-fallback {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vh;
+    height: 100vw;
+    transform-origin: top left;
+    transform: rotate(90deg) translateY(-100%);
+}
+
+.display-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+    font-weight: 900;
+    text-align: center;
+    line-height: 1.05;
+    word-break: break-word;
+}
+
+@keyframes beacon-blink-bg {
+    0%,
+    49% {
+        background: var(--preset-bg);
+    }
+    50%,
+    100% {
+        background: var(--preset-fg);
+    }
+}
+
+@keyframes beacon-blink-fg {
+    0%,
+    49% {
+        color: var(--preset-fg);
+    }
+    50%,
+    100% {
+        color: var(--preset-bg);
+    }
+}
+
+.mode-blink {
+    animation: beacon-blink-bg 0.5s steps(1, end) infinite;
+}
+
+.mode-blink .display-text {
+    animation: beacon-blink-fg 0.5s steps(1, end) infinite;
+}
