@@ -2,6 +2,7 @@ import type { DisplayMode } from './types.ts'
 
 const RECENTS_KEY = 'beacon:recents'
 const SETTINGS_KEY = 'beacon:settings'
+const DRAFT_KEY = 'beacon:draft'
 const MAX_RECENTS = 10
 
 const STARTER_RECENTS = ['TAXI', 'ID?', 'ONE MORE SONG', '🎉 BIRTHDAY 🎉']
@@ -56,4 +57,12 @@ export function getSettings(): Settings {
 
 export function saveSettings(settings: Settings) {
   localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings))
+}
+
+export function getDraft(): string {
+  return localStorage.getItem(DRAFT_KEY) ?? ''
+}
+
+export function saveDraft(text: string) {
+  localStorage.setItem(DRAFT_KEY, text)
 }

@@ -4,34 +4,29 @@ import { DisplayScreen } from './display.ts'
 import { runBoot } from './onboarding.ts'
 
 const app = document.querySelector<HTMLDivElement>('#app')!
+app.innerHTML = `
+  <div id="compose-screen" class="screen compose-screen"></div>
+  <div id="display-screen" class="screen display-screen hidden"></div>
+`
 
-async function start() {
-  await runBoot(app)
+const composeRoot = app.querySelector<HTMLDivElement>('#compose-screen')!
+const displayRoot = app.querySelector<HTMLDivElement>('#display-screen')!
 
-  app.innerHTML = `
-    <div id="compose-screen" class="screen compose-screen"></div>
-    <div id="display-screen" class="screen display-screen hidden"></div>
-  `
-
-  const composeRoot = app.querySelector<HTMLDivElement>('#compose-screen')!
-  const displayRoot = app.querySelector<HTMLDivElement>('#display-screen')!
-
-  const display = new DisplayScreen(displayRoot, () => {
-    displayRoot.classList.add('hidden')
-    composeRoot.classList.remove('hidden')
-    compose.focusInput()
-  })
-
-  const compose = new ComposeScreen(composeRoot, (text, colors, mode) => {
-    composeRoot.classList.add('hidden')
-    displayRoot.classList.remove('hidden')
-    void display.show(text, colors, mode)
-  })
-
+const display = new DisplayScreen(displayRoot, () => {
+  displayRoot.classList.add('hidden')
+  composeRoot.classList.remove('hidden')
   compose.focusInput()
-}
+})
 
-void start()
+const compose = new ComposeScreen(composeRoot, (text, colors, mode) => {
+  composeRoot.classList.add('hidden')
+  displayRoot.classList.remove('hidden')
+  void display.show(text, colors, mode)
+})
+
+// Boot overlays (splash, install prompt) render on top of their own
+// document.body layer, so they don't need to gate mounting Compose/Display.
+void runBoot()
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

@@ -1,6 +1,14 @@
 import { PRESETS, CUSTOM_PRESET_ID, MODES, type DisplayMode } from './types.ts'
 import type { DisplayColors } from './display.ts'
-import { getRecents, addRecent, removeRecent, getSettings, saveSettings } from './storage.ts'
+import { getRecents, addRecent, removeRecent, getSettings, saveSettings, getDraft, saveDraft } from './storage.ts'
+import { promptInstall, isStandalone } from './onboarding.ts'
+
+const COG_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="3"></circle>
+    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+  </svg>
+`
 
 export type GoHandler = (text: string, colors: DisplayColors, mode: DisplayMode) => void
 
@@ -32,6 +40,9 @@ export class ComposeScreen {
     this.customFg = settings.customFg
 
     this.root.innerHTML = `
+      <button type="button" id="install-cog-btn" class="install-cog-btn" aria-label="Install app">
+        ${COG_ICON_SVG}
+      </button>
       <textarea
         id="message-input"
         placeholder="TYPE YOUR SIGN"
@@ -71,6 +82,7 @@ export class ComposeScreen {
     `
 
     this.textarea = this.root.querySelector('#message-input')!
+    this.textarea.value = getDraft()
     this.drawer = this.root.querySelector('#recents-drawer')!
     this.recentsList = this.root.querySelector('#recents-list')!
     this.deleteDialog = this.root.querySelector('#delete-dialog')!
@@ -89,12 +101,20 @@ export class ComposeScreen {
   }
 
   private wireEvents() {
+    const installCogBtn = this.root.querySelector<HTMLButtonElement>('#install-cog-btn')!
+    if (isStandalone()) {
+      installCogBtn.classList.add('hidden')
+    } else {
+      installCogBtn.addEventListener('click', () => void promptInstall())
+    }
+
     this.textarea.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault()
         this.go()
       }
     })
+    this.textarea.addEventListener('input', () => saveDraft(this.textarea.value))
 
     this.root.querySelectorAll<HTMLButtonElement>('.swatch[data-preset]:not(#custom-swatch)').forEach((btn) => {
       btn.addEventListener('click', () => {
@@ -225,6 +245,7 @@ export class ComposeScreen {
       window.clearTimeout(clickTimer)
       clickTimer = window.setTimeout(() => {
         this.textarea.value = message
+        saveDraft(message)
         this.drawer.classList.remove('open')
         this.textarea.focus()
       }, 300)
