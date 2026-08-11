@@ -54,19 +54,37 @@ function showSplash(): Promise<void> {
 }
 
 /** Shows the Install App / Continue to Website overlay. Safe to call any
- * time — used both during first-launch boot and from a manual re-trigger. */
+ * time — used both during first-launch boot and from a manual re-trigger.
+ *
+ * iOS Safari never fires `beforeinstallprompt` — there is no programmatic
+ * install API at all, only the user manually driving Share → Add to Home
+ * Screen. An "Install App" button there can't actually install anything, so
+ * rather than show one that fails on tap (and only reveals instructions
+ * afterward), iOS gets the Share/Add to Home Screen hint up front as plain
+ * text next to a single Continue action. */
 export function promptInstall(): Promise<void> {
   return new Promise((resolve) => {
     const overlay = document.createElement('div')
     overlay.className = 'install-screen'
+    const canPromptInstall = deferredInstallPrompt !== null
+    const ios = isIos()
+
     overlay.innerHTML = `
       <div class="install-mark">BEACON</div>
-      <p class="install-copy">Install Beacon for instant, full-screen access next time.</p>
-      <button type="button" id="install-btn" class="install-btn">Install App</button>
+      <p class="install-copy">${
+        canPromptInstall
+          ? 'Install Beacon for instant, full-screen access next time.'
+          : ios
+            ? 'Add Beacon to your Home Screen for instant, full-screen access next time.'
+            : 'Beacon works the same either way — install is optional.'
+      }</p>
+      ${canPromptInstall ? '<button type="button" id="install-btn" class="install-btn">Install App</button>' : ''}
       <button type="button" id="continue-btn" class="continue-btn">Continue to Website</button>
-      <p id="ios-instructions" class="ios-instructions hidden">
-        Tap the <strong>Share</strong> icon, then <strong>Add to Home Screen</strong>.
-      </p>
+      ${
+        ios
+          ? '<p class="ios-instructions">Tap the <strong>Share</strong> icon, then <strong>Add to Home Screen</strong>.</p>'
+          : ''
+      }
       <a href="https://github.com/cowglow/beacon" target="_blank" rel="noopener noreferrer" class="github-link">View on GitHub</a>
     `
     document.body.appendChild(overlay)
@@ -78,22 +96,14 @@ export function promptInstall(): Promise<void> {
     }
 
     overlay.querySelector('#continue-btn')!.addEventListener('click', finish)
-    overlay.querySelector('#install-btn')!.addEventListener('click', () => {
-      if (deferredInstallPrompt) {
-        const prompt = deferredInstallPrompt
-        deferredInstallPrompt = null
-        void prompt
-          .prompt()
-          .then(() => prompt.userChoice)
-          .catch(() => undefined)
-          .then(finish)
-      } else if (isIos()) {
-        overlay.querySelector('#ios-instructions')!.classList.remove('hidden')
-        overlay.querySelector<HTMLButtonElement>('#install-btn')!.classList.add('hidden')
-      } else {
-        // No install API available in this browser — nothing more we can offer.
-        finish()
-      }
+    overlay.querySelector('#install-btn')?.addEventListener('click', () => {
+      const prompt = deferredInstallPrompt!
+      deferredInstallPrompt = null
+      void prompt
+        .prompt()
+        .then(() => prompt.userChoice)
+        .catch(() => undefined)
+        .then(finish)
     })
   })
 }
