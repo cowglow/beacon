@@ -63,7 +63,7 @@ button {
     font-size: clamp(32px, 11vw, 64px);
     font-weight: 900;
     letter-spacing: 6px;
-    color: #ffd400;
+    color: #FFE14D;
 }
 
 .splash-mark {
@@ -93,7 +93,7 @@ button {
 .splash-bar-fill {
     height: 100%;
     width: 0;
-    background: #ffd400;
+    background: #FFE14D;
     animation: splash-fill 3s linear forwards;
 }
 
@@ -134,7 +134,7 @@ button {
 }
 
 .install-btn {
-    background: #ffd400;
+    background: #FFE14D;
     color: #000;
     border: none;
 }
@@ -206,7 +206,7 @@ button {
     padding: 24px;
     resize: none;
     outline: none;
-    caret-color: #ffd400;
+    caret-color: #FFE14D;
 }
 
 #message-input::placeholder {
@@ -287,7 +287,7 @@ button {
 }
 
 .mode-btn.selected {
-    background: #ffd400;
+    background: #FFE14D;
     color: #000;
     border-color: #ffd400;
 }
@@ -298,7 +298,7 @@ button {
     font-weight: 900;
     letter-spacing: 3px;
     text-transform: uppercase;
-    background: #ffd400;
+    background: #FFE14D;
     color: #000;
     border: none;
     border-radius: 14px;

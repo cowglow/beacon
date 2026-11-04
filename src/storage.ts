@@ -5,7 +5,7 @@ const SETTINGS_KEY = 'beacon:settings'
 const DRAFT_KEY = 'beacon:draft'
 const MAX_RECENTS = 10
 
-const STARTER_RECENTS = ['TAXI', 'ID?', 'ONE MORE SONG', '🎉 BIRTHDAY 🎉']
+const STARTER_RECENTS = ['.bass', 'I ❤️ Bass', 'dotbassnbg', 'TAXI']
 
 export interface Settings {
   presetId: string
@@ -15,10 +15,10 @@ export interface Settings {
 }
 
 const DEFAULT_SETTINGS: Settings = {
-  presetId: 'classic',
-  mode: 'static',
-  customBg: '#e10600',
-  customFg: '#ffffff',
+  presetId: 'Sunny Yellow',
+  mode: 'blink',
+  customBg: '#0A0A0A',
+  customFg: '#C8F25A',
 }
 
 export function getRecents(): string[] {
@@ -60,7 +60,7 @@ export function saveSettings(settings: Settings) {
 }
 
 export function getDraft(): string {
-  return localStorage.getItem(DRAFT_KEY) ?? ''
+  return localStorage.getItem(DRAFT_KEY) ?? '.bass'
 }
 
 export function saveDraft(text: string) {
