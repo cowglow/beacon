@@ -2,6 +2,8 @@ import { PRESETS, CUSTOM_PRESET_ID, MODES, type DisplayMode } from './types.ts'
 import type { DisplayColors } from './display.ts'
 import { getRecents, addRecent, removeRecent, getSettings, saveSettings, getDraft, saveDraft } from './storage.ts'
 import { promptInstall, isStandalone } from './onboarding.ts'
+import { buildShareUrl, readSharedText, clearSharedText } from './share.ts'
+import { qrSvg } from './qr.ts'
 
 const COG_ICON_SVG = `
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -9,6 +11,17 @@ const COG_ICON_SVG = `
     <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
   </svg>
 `
+
+const SHARE_ICON_SVG = `
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="3" y="3" width="7" height="7" rx="1"></rect>
+    <rect x="14" y="3" width="7" height="7" rx="1"></rect>
+    <rect x="3" y="14" width="7" height="7" rx="1"></rect>
+    <path d="M14 14h3v3h-3zM20 14v.01M14 20v.01M17 20h4v-3"></path>
+  </svg>
+`
+
+const MAX_LENGTH = 140
 
 export type GoHandler = (text: string, colors: DisplayColors, mode: DisplayMode) => void
 
@@ -29,6 +42,11 @@ export class ComposeScreen {
   private customBg: string
   private customFg: string
   private pendingDeleteMessage: string | null = null
+  private shareDialog: HTMLDialogElement
+  private shareQr: HTMLElement
+  private shareUrlEl: HTMLElement
+  private shareLinkBtn: HTMLButtonElement
+  private shareUrl = ''
 
   constructor(root: HTMLElement, onGo: GoHandler) {
     this.root = root
@@ -46,7 +64,7 @@ export class ComposeScreen {
       <textarea
         id="message-input"
         placeholder="TYPE YOUR SIGN"
-        maxlength="140"
+        maxlength="${MAX_LENGTH}"
         autocomplete="off"
         autocapitalize="characters"
         spellcheck="false"
@@ -66,7 +84,12 @@ export class ComposeScreen {
         <div class="row modes" role="group" aria-label="Display mode">
           ${MODES.map((m) => `<button type="button" class="mode-btn" data-mode="${m.id}">${m.label}</button>`).join('')}
         </div>
-        <button type="button" id="go-btn">GO</button>
+        <div class="go-row">
+          <button type="button" id="share-btn" class="share-btn" aria-label="Share as QR code">
+            ${SHARE_ICON_SVG}
+          </button>
+          <button type="button" id="go-btn">GO</button>
+        </div>
       </div>
       <button type="button" id="recents-toggle">Recents</button>
       <div id="recents-drawer" class="drawer">
@@ -79,10 +102,23 @@ export class ComposeScreen {
           <button type="button" id="dialog-remove" class="dialog-btn remove">Remove</button>
         </div>
       </dialog>
+      <dialog id="share-dialog" class="confirm-dialog share-dialog">
+        <div id="share-qr" class="share-qr" role="img" aria-label="QR code linking to this message"></div>
+        <p id="share-url" class="share-url"></p>
+        <div class="dialog-actions">
+          <button type="button" id="share-link" class="dialog-btn keep">Copy link</button>
+          <button type="button" id="share-done" class="dialog-btn done">Done</button>
+        </div>
+      </dialog>
     `
 
     this.textarea = this.root.querySelector('#message-input')!
     this.textarea.value = getDraft()
+    this.shareDialog = this.root.querySelector('#share-dialog')!
+    this.shareQr = this.root.querySelector('#share-qr')!
+    this.shareUrlEl = this.root.querySelector('#share-url')!
+    this.shareLinkBtn = this.root.querySelector('#share-link')!
+    this.applySharedText()
     this.drawer = this.root.querySelector('#recents-drawer')!
     this.recentsList = this.root.querySelector('#recents-list')!
     this.deleteDialog = this.root.querySelector('#delete-dialog')!
@@ -100,7 +136,56 @@ export class ComposeScreen {
     this.textarea.focus()
   }
 
+  /** A `#t=` link (e.g. from a scanned QR code) prefills the message, replacing the draft. */
+  private applySharedText() {
+    const shared = readSharedText()
+    if (shared === null) return
+    clearSharedText()
+    const text = shared.slice(0, MAX_LENGTH)
+    if (!text.trim()) return
+    this.textarea.value = text
+    saveDraft(text)
+  }
+
+  private openShare() {
+    const text = this.textarea.value.trim()
+    if (!text) {
+      this.textarea.focus()
+      return
+    }
+    this.shareUrl = buildShareUrl(text)
+    this.shareQr.innerHTML = qrSvg(this.shareUrl)
+    this.shareUrlEl.textContent = this.shareUrl
+    this.shareLinkBtn.textContent = typeof navigator.share === 'function' ? 'Share link' : 'Copy link'
+    this.shareDialog.showModal()
+  }
+
+  private async shareLink() {
+    if (typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ url: this.shareUrl })
+      } catch {
+        // user dismissed the share sheet
+      }
+      return
+    }
+    try {
+      await navigator.clipboard.writeText(this.shareUrl)
+      this.shareLinkBtn.textContent = 'Copied!'
+    } catch {
+      this.shareLinkBtn.textContent = 'Copy failed'
+    }
+  }
+
   private wireEvents() {
+    this.root.querySelector('#share-btn')!.addEventListener('click', () => this.openShare())
+    this.shareLinkBtn.addEventListener('click', () => void this.shareLink())
+    this.root.querySelector('#share-done')!.addEventListener('click', () => this.shareDialog.close())
+    this.shareDialog.addEventListener('click', (e) => {
+      if (e.target === this.shareDialog) this.shareDialog.close() // backdrop tap
+    })
+    window.addEventListener('hashchange', () => this.applySharedText())
+
     const installCogBtn = this.root.querySelector<HTMLButtonElement>('#install-cog-btn')!
     if (isStandalone()) {
       installCogBtn.classList.add('hidden')
