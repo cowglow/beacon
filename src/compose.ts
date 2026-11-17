@@ -4,6 +4,7 @@ import { getRecents, addRecent, removeRecent, getSettings, saveSettings, getDraf
 import { promptInstall, isStandalone } from './onboarding.ts'
 import { buildShareUrl, readSharedText, clearSharedText } from './share.ts'
 import { qrSvg } from './qr.ts'
+import { createSignGif } from './sign-gif.ts'
 
 const COG_ICON_SVG = `
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -88,8 +89,10 @@ export class ComposeScreen {
           <button type="button" id="share-btn" class="share-btn" aria-label="Share as QR code">
             ${SHARE_ICON_SVG}
           </button>
+          <button type="button" id="gif-btn" class="gif-btn" aria-label="Download animated GIF">GIF</button>
           <button type="button" id="go-btn">GO</button>
         </div>
+        <p id="gif-status" class="gif-status" role="status"></p>
       </div>
       <button type="button" id="recents-toggle">Recents</button>
       <div id="recents-drawer" class="drawer">
@@ -177,7 +180,32 @@ export class ComposeScreen {
     }
   }
 
+  private downloadGif(status: HTMLElement) {
+    status.textContent = ''
+    const text = this.textarea.value.trim()
+    if (!text) {
+      this.textarea.focus()
+      return
+    }
+
+    try {
+      const gif = createSignGif(text, this.resolveColors(), this.mode)
+      const url = URL.createObjectURL(gif)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = 'beacon.gif'
+      document.body.append(link)
+      link.click()
+      link.remove()
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000)
+    } catch {
+      status.textContent = 'Could not create the GIF. Please try again.'
+    }
+  }
+
   private wireEvents() {
+    const gifStatus = this.root.querySelector<HTMLElement>('#gif-status')!
+    this.root.querySelector('#gif-btn')!.addEventListener('click', () => this.downloadGif(gifStatus))
     this.root.querySelector('#share-btn')!.addEventListener('click', () => this.openShare())
     this.shareLinkBtn.addEventListener('click', () => void this.shareLink())
     this.root.querySelector('#share-done')!.addEventListener('click', () => this.shareDialog.close())
@@ -199,7 +227,10 @@ export class ComposeScreen {
         this.go()
       }
     })
-    this.textarea.addEventListener('input', () => saveDraft(this.textarea.value))
+    this.textarea.addEventListener('input', () => {
+      gifStatus.textContent = ''
+      saveDraft(this.textarea.value)
+    })
 
     this.root.querySelectorAll<HTMLButtonElement>('.swatch[data-preset]:not(#custom-swatch)').forEach((btn) => {
       btn.addEventListener('click', () => {
