@@ -318,7 +318,8 @@ button {
     flex: 1;
 }
 
-.share-btn {
+.share-btn,
+.gif-btn {
     flex: 0 0 auto;
     width: 80px;
     padding: 20px;
@@ -337,7 +338,25 @@ button {
     height: 100%;
 }
 
-.share-btn:active {
+.gif-btn {
+    width: 64px;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 900;
+}
+
+.gif-status {
+    color: #fff;
+    font-size: 14px;
+    margin: 0;
+}
+
+.gif-status:empty {
+    position: absolute;
+}
+
+.share-btn:active,
+.gif-btn:active {
     transform: scale(0.97);
 }
 

@@ -43,6 +43,7 @@ This is basically the whole pitch of the **[IndieWeb](https://indieweb.org/)**: 
 - 🖊️ **Compose** — huge textarea, autofocus-free (nobody wants the keyboard ambushing them on page load), Shift+Enter for a real newline, plain Enter to GO
 - 🎨 **Styles** — Black/Yellow, Black/White, or tap **Custom** for a native color picker on the background, with a one-tap black/white toggle for the text
 - ✨ **Modes** — Static or Blink (a clean color-invert flash, not a seizure-bait flicker)
+- 🎞️ **GIF export** — download your sign as a looping GIF in your chosen colors. Static reveals the text, and Blink alternates the colors.
 - 🕓 **Recents** — your last 10 signs, one tap to reload; long-press (mobile) or double-click (desktop) to delete, with a confirm dialog so you don't nuke `ONE MORE SONG` by accident
 - 📶 **Offline-first** — service worker caches the app shell, so it still works with zero bars
 - 🔒 **Wake lock + forced landscape** — the screen won't dim and the text stays huge and sideways-correct even if your browser can't lock orientation (CSS rotation fallback covers that)
